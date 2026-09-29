@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Competitive Intelligence Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F6F8;--card:#fff;--ink:#1A2230;--mut:#5E6A7D;--line:#E2E6EC;--acc:#0E7C86;--warn:#C2410C}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Instrument Sans',system-ui,sans-serif;display:flex;min-height:100vh}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;margin:0 0 .4em;line-height:1.2}h1{font-size:28px}h2{font-size:20px}h3{font-size:16px}
+nav{width:230px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;flex-shrink:0}
+nav b{font:600 17px Fraunces,serif;display:block;margin:0 8px 18px}nav small{display:block;color:var(--mut);margin:16px 8px 6px}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;font:inherit;color:var(--ink);cursor:pointer}
+nav button:hover{background:var(--bg)}nav button.on{background:#E3F2F3;color:#0A5C64;font-weight:600}
+main{flex:1;padding:28px 34px;max-width:1100px;min-width:0}
+.demo{background:#FFF4E5;border:1px solid #F5D9A8;color:#7A4A05;padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:20px}
+.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}.stat{font:600 30px Fraunces,serif}.mut{color:var(--mut);font-size:13px}
+.btn{border:1px solid var(--acc);color:var(--acc);background:#fff;padding:6px 12px;border-radius:8px;font:500 13px inherit;cursor:pointer}.btn:hover,.btn.on{background:var(--acc);color:#fff}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:16px 0 20px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font:inherit;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}.tabs .on{color:var(--ink);border-color:var(--acc);font-weight:600}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;color:#fff}
+.conf{height:6px;background:var(--line);border-radius:9px;margin:6px 0;overflow:hidden}.conf i{display:block;height:100%;background:var(--acc)}
+.tl{border-left:2px solid var(--line);margin-left:8px}.ti{position:relative;padding:0 0 16px 22px}.ti:before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--c);border:2px solid #fff}
+.ti button{all:unset;cursor:pointer;display:block;width:100%}.ti .card{padding:12px 14px}.ti:hover .card{border-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px;cursor:pointer;font:13px inherit}.chip.on{color:#fff;border-color:transparent}
+select{font:inherit;padding:4px 8px;border-radius:8px;border:1px solid var(--line)}
+.ch{width:100%;height:auto}.ch text{font-size:11px;fill:var(--mut)}
+.steps{display:flex;gap:0;flex-wrap:wrap;margin:14px 0}.step{flex:1;min-width:130px;padding:14px;border:1px solid var(--line);background:#fff;text-align:center;font-weight:600}.step.now{background:#E3F2F3;border-color:var(--acc)}.step.nx{border-style:dashed;color:var(--acc)}
+.note{font-size:13px;color:var(--mut);border-left:3px solid var(--line);padding-left:10px;margin:10px 0}
+#dr{position:fixed;top:0;right:0;width:min(460px,100%);height:100%;background:#fff;border-left:1px solid var(--line);box-shadow:-8px 0 30px #0002;padding:22px;overflow:auto;transform:translateX(105%);transition:transform .25s;z-index:9}#dr.open{transform:none}
+.q{background:var(--bg);border-radius:8px;padding:10px;font-size:13px;margin:8px 0}.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ba div{padding:8px;border-radius:8px;font-size:13px}
+.bf{background:#FDECEA}.af{background:#E7F5EC}
+@media(max-width:800px){body{flex-direction:column}nav{width:100%;height:auto;position:static;display:flex;flex-wrap:wrap;gap:4px;border:0;border-bottom:1px solid var(--line)}nav small{display:none}nav b{width:100%}nav button{width:auto}main{padding:18px}}
+</style></head><body>
+<nav id="nav"></nav><main id="app"></main><aside id="dr" aria-label="Evidence"></aside>
+<script>
+const T={hiring:['Hiring','#7C3AED'],product:['Product','#0E7C86'],pricing:['Pricing','#C2410C'],marketing:['Marketing','#DB2777'],api:['Developer/API','#2563EB'],legal:['Legal/Infra','#64748B']};
+const SRC={hiring:'Careers page',product:'Product changelog',pricing:'Pricing page',marketing:'Homepage / blog',api:'API docs / GitHub',legal:'Terms / Trust page'};
+const E=(d,t,ti,tx,b,a)=>({d,t,ti,tx,b,a,src:SRC[t],url:'https://demo.example/'+t+'/'+d});
+// DEMO DATA: fictional companies with realistic public-event patterns. Replace with collectors that write to the database.
+const C=[
+{id:'vantage',n:'Vantage Cloud',sub:'CRM for growing teams',ev:[
+E('2026-04-08','hiring','Posts 6 enterprise account executive roles','Careers page lists Enterprise AE, Solutions Engineer and Customer Success (Enterprise) openings.'),
+E('2026-04-22','marketing','Homepage message shifts to scale','Hero copy changed after the April redesign.','CRM for small teams','CRM that scales with you'),
+E('2026-05-12','api','API v2 docs add SSO and SCIM endpoints','New "Identity" section documents SAML SSO and SCIM provisioning.'),
+E('2026-05-28','hiring','Hires 4 security and compliance engineers','Four security/compliance engineering roles opened within two weeks.'),
+E('2026-06-10','pricing','Enterprise tier added, Business plan raised','A "Contact sales" tier appears; the Business plan price increases.','Business $29/user/mo','Business $39/user/mo + Enterprise (custom)'),
+E('2026-06-24','legal','Publishes DPA and SOC 2 Type II page','New Trust Center with data processing addendum and audit summary.'),
+E('2026-07-15','product','Changelog: audit logs and role-based access','Release notes introduce admin audit logs, custom roles and SSO enforcement.'),
+E('2026-08-05','marketing','Case study with 2,000-seat customer','Blog post features a multi-department rollout at a large company.'),
+E('2026-08-19','hiring','Opens EMEA sales lead role','Careers page lists Head of Sales, EMEA (London).'),
+E('2026-09-02','legal','Terms add EU data-residency clause','Updated terms mention an EU hosting region for customer data.'),
+E('2026-09-16','api','SDK adds a "region" parameter','Public SDK repository merges a change letting clients choose a data region.')],
+pat:[{n:'Enterprise push',conf:82,per:'Apr to Aug 2026',ev:[0,1,2,4,5,6,7],c:'Vantage added an Enterprise plan and raised its Business price.',m:'Combined with security hiring, SSO/SCIM docs, SOC 2 and audit logs, this suggests a growing focus on larger customers.',w:['Enterprise features','Partner or reseller announcements','More compliance certifications']},
+{n:'EU expansion',conf:61,per:'Aug to Sep 2026',ev:[8,9,10],c:'Vantage is hiring in EMEA and adding data-region support.',m:'Three signals in a short window may indicate preparation for an EU launch, but the history is still brief.',w:['EU pricing in euros','GDPR marketing pages','More EMEA roles']}],
+tr:{st:['SMB','Mid-market','Enterprise'],now:1,ev:[0,2,4,5,6],note:'Possible trajectory: moving from mid-market toward enterprise.'}},
+{id:'helix',n:'Helix Desk',sub:'Customer support software',ev:[
+E('2026-04-15','product','AI reply assistant enters beta','Changelog announces suggested replies for agents.'),
+E('2026-06-03','pricing','Free tier expanded','Free plan limit rises, with AI features as an upgrade.','Free: 100 tickets','Free: 500 tickets'),
+E('2026-07-20','hiring','Hires 5 machine-learning engineers','Careers page shows a new ML platform team.'),
+E('2026-08-11','marketing','New message: support that answers itself','Homepage headline emphasises automation over agent tools.','Helpdesk for happy teams','Support that answers itself'),
+E('2026-09-09','api','Webhook endpoints for LLM workflows published','Docs add event hooks for AI-generated responses.')],
+pat:[{n:'AI-first automation',conf:74,per:'Apr to Sep 2026',ev:[0,1,2,3,4],c:'Helix Desk shifted its product, pricing and messaging around AI automation.',m:'The free-tier change suggests a possible plan to attract volume and monetise AI add-ons.',w:['AI usage-based pricing','Partnerships with model providers','Agent-free support claims']}],
+tr:{st:['Helpdesk','AI automation','Platform'],now:1,ev:[0,2,3,4],note:'Possible trajectory: from helpdesk tool toward an automation platform.'}},
+{id:'orbit',n:'Orbit Suite',sub:'Project management',ev:[
+E('2026-05-05','hiring','Country manager role for India','Careers page lists a Country Manager, India.'),
+E('2026-06-18','legal','Terms add INR billing','Updated terms allow billing in Indian rupees.'),
+E('2026-07-30','pricing','Regional pricing for India','Pricing page shows a rupee price list.','USD only','USD + INR'),
+E('2026-08-25','marketing','Hindi site launched','Localised homepage and blog appear.')],
+pat:[{n:'India market entry',conf:68,per:'May to Aug 2026',ev:[0,1,2,3],c:'Orbit Suite added local billing, pricing, language and leadership.',m:'These signals suggest a possible India launch, though sales activity has not been observed yet.',w:['Local sales hiring','Payment partners','Local events']}],
+tr:{st:['US-only','APAC','Global'],now:0.5,ev:[0,2,3],note:'Possible trajectory: early expansion beyond the US.'}}];
+const SC={price:['Competitor cuts prices','Reference-price pressure; buyers compare plans side by side.','Entry tiers come under pressure; consider bundles over matching cuts.','Price-sensitive customers may reconsider at renewal.','Longer deals as buyers ask for discounts.','May start a price war among smaller rivals.',['Pricing page changes','Promo banners','SMB sales hiring']],
+ai:['Competitor launches an AI feature','Feature gap in automation and assistants.','AI may become a paid add-on; usage-based pricing possible.','Customers may expect AI as standard.','Reps need a clear AI story.','Rivals may rush similar features.',['Changelog entries','ML hiring','LLM docs or webhooks']],
+market:['Competitor enters a new market','New local options for your customers there.','Regional pricing and packaging may be needed.','Local customers get another vendor to evaluate.','Regional deals may become more contested.','Partnerships and local players may shift.',['Local hiring','Billing and legal updates','Localised marketing']],
+ent:['Competitor targets enterprise customers','Security and admin features become a buying criterion.','Enterprise tiers may reset price expectations upmarket.','Large accounts get a stronger alternative.','Enterprise sales cycles face more competition.','Competitors may seek analyst or partner validation.',['Compliance certifications','Enterprise roles','Partner announcements']]};
+C.forEach(c=>c.ev.sort((a,b)=>a.d.localeCompare(b.d)));
+const M=['2026-04','2026-05','2026-06','2026-07','2026-08','2026-09'],ml=m=>new Date(m+'-01').toLocaleString('en',{month:'short'}),fd=d=>new Date(d).toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+let S={v:'dash',c:0,tab:'Overview',ty:new Set(Object.keys(T)),f:M[0],t:M[5],sc:'price'};
+const $=s=>document.querySelector(s);
+function chart(evs){const W=520,H=150,bw=44,g=(W-M.length*bw)/(M.length+1),mx=Math.max(3,...M.map(m=>evs.filter(e=>e.d.startsWith(m)).length));
+return `<svg viewBox="0 0 ${W} ${H+24}" class="ch" role="img" aria-label="Signals per month">`+M.map((m,i)=>{let x=g+i*(bw+g),y=H;return evs.filter(e=>e.d.startsWith(m)).sort((a,b)=>a.t.localeCompare(b.t)).map(e=>{const h=H/mx*.92;y-=h;return `<rect x="${x}" y="${y}" width="${bw}" height="${h-2}" rx="3" fill="${T[e.t][1]}"/>`}).join('')+`<text x="${x+bw/2}" y="${H+16}" text-anchor="middle">${ml(m)}</text>`}).join('')+`</svg>`}
+const tag=t=>`<span class="tag" style="background:${T[t][1]}">${T[t][0]}</span>`;
+const legend=()=>Object.keys(T).map(t=>tag(t)).join(' ');
+function evCard(ci,i,btn=true){const e=C[ci].ev[i];return `<div class="q"><b>${e.ti}</b><br>${tag(e.t)} <span class="mut">${fd(e.d)}</span><p>${e.tx}</p>${e.b?`<div class="ba"><div class="bf"><b>Before</b><br>${e.b}</div><div class="af"><b>After</b><br>${e.a}</div></div>`:''}<p class="mut">Source: ${e.src}<br><a href="${e.url}" target="_blank" rel="noopener">${e.url}</a> (demo URL)</p></div>`}
+function brief(ci,p,pi){return `<div class="card"><h3>${p.n}</h3><div class="mut">${p.per} · Confidence ${p.conf}%</div><div class="conf"><i style="width:${p.conf}%"></i></div>
+<p><b>What changed?</b> ${p.c}</p><p><b>Why does it matter?</b> ${p.m}</p><p><b>What to watch next:</b> ${p.w.join(', ')}.</p>
+<button class="btn" onclick="pat(${ci},${pi})">View evidence (${p.ev.length} signals)</button></div>`}
+function pat(ci,pi){const p=C[ci].pat[pi];D(`<h2>${p.n}</h2><p class="mut">${C[ci].n} · ${p.per} · Confidence ${p.conf}%</p><p>This pattern is a possible direction, not a fact. It rests on ${p.ev.length} related signals; no single signal is treated as proof.</p><h3>Contributing signals</h3>${p.ev.map(i=>evCard(ci,i)).join('')}`)}
+function ev(ci,i){D(`<h2>Signal details</h2><p class="mut">${C[ci].n}</p>${evCard(ci,i)}<h3>Used in</h3>${C[ci].pat.map((p,pi)=>p.ev.includes(i)?`<button class="btn" onclick="pat(${ci},${pi})">${p.n}</button> `:'').join('')||'<p class="mut">Not yet part of a pattern.</p>'}`)}
+function D(h){$('#dr').innerHTML=`<button class="btn" onclick="closeD()" style="float:right">Close</button>${h}`;$('#dr').classList.add('open')}
+const closeD=()=>$('#dr').classList.remove('open');
+function go(v,c=S.c,tab='Overview'){Object.assign(S,{v,c,tab});closeD();render()}
+function tog(t){S.ty.has(t)?S.ty.delete(t):S.ty.add(t);render()}
+function nav(){$('#nav').innerHTML=`<b>Competitive Intelligence Agent</b><button class="${S.v=='dash'?'on':''}" onclick="go('dash')">Dashboard</button><small>Competitors</small>`+C.map((c,i)=>`<button class="${S.v=='comp'&&S.c==i?'on':''}" onclick="go('comp',${i})">${c.n}</button>`).join('')}
+function dash(){const all=C.flatMap((c,ci)=>c.ev.map((e,i)=>({...e,ci,i}))),pats=C.flatMap((c,ci)=>c.pat.map((p,pi)=>({p,ci,pi})));
+const rec=[...all].sort((a,b)=>b.d.localeCompare(a.d)).slice(0,6);
+return `<h1>Dashboard</h1><p class="mut">What changed, what it may mean, and the evidence behind it.</p>
+<div class="grid g4"><div class="card"><div class="stat">${C.length}</div>Competitors tracked</div><div class="card"><div class="stat">${all.length}</div>Signals remembered</div><div class="card"><div class="stat">${pats.length}</div>Emerging patterns</div><div class="card"><div class="stat">${all.filter(e=>e.d>='2026-08-15').length}</div>Signals in last 45 days</div></div>
+<div class="grid g2" style="margin-top:16px"><div class="card"><h3>Competitor activity, 6 months</h3>${chart(all)}<div>${legend()}</div></div>
+<div class="card"><h3>Recent signals</h3>${rec.map(e=>`<p style="margin:.5em 0"><button class="btn" style="padding:2px 8px" onclick="ev(${e.ci},${e.i})">Open</button> ${tag(e.t)} <b>${C[e.ci].n}</b>: ${e.ti} <span class="mut">${fd(e.d)}</span></p>`).join('')}</div></div>
+<h2 style="margin-top:24px">Strategic briefings</h2><div class="grid g2">${pats.sort((a,b)=>b.p.conf-a.p.conf).map(x=>`<div><div class="mut" style="margin-bottom:4px">${C[x.ci].n}</div>${brief(x.ci,x.p,x.pi)}</div>`).join('')}</div>`}
+function comp(){const ci=S.c,c=C[ci],tabs=['Overview','Timeline','Signals','Emerging Patterns','Trajectory','What-If'];
+let h=`<h1>${c.n}</h1><div class="mut">${c.sub} · ${c.ev.length} signals remembered</div><div class="tabs">${tabs.map(t=>`<button class="${S.tab==t?'on':''}" onclick="go('comp',${ci},'${t}')">${t}</button>`).join('')}</div>`;
+if(S.tab=='Overview')h+=`<div class="grid g2"><div class="card"><h3>Activity</h3>${chart(c.ev)}${legend()}</div><div class="card"><h3>Possible trajectory</h3>${trj(c,false)}</div></div><h2 style="margin-top:20px">So what?</h2><div class="grid g2">${c.pat.map((p,i)=>brief(ci,p,i)).join('')}</div>`;
+if(S.tab=='Timeline'){const ev=c.ev.map((e,i)=>({...e,i})).filter(e=>S.ty.has(e.t)&&e.d.slice(0,7)>=S.f&&e.d.slice(0,7)<=S.t).reverse(),sel=(k)=>`<select onchange="S.${k}=this.value;render()">${M.map(m=>`<option value="${m}" ${S[k]==m?'selected':''}>${ml(m)} 2026</option>`).join('')}</select>`;
+h+=`<div class="chips">${Object.keys(T).map(t=>`<button class="chip ${S.ty.has(t)?'on':''}" style="${S.ty.has(t)?'background:'+T[t][1]:''}" onclick="tog('${t}')">${T[t][0]}</button>`).join('')}<span class="mut">From</span>${sel('f')}<span class="mut">to</span>${sel('t')}</div><div class="tl">${ev.map(e=>`<div class="ti" style="--c:${T[e.t][1]}"><button onclick="ev(${ci},${e.i})"><div class="card"><span class="mut">${fd(e.d)}</span> ${tag(e.t)}<br><b>${e.ti}</b></div></button></div>`).join('')||'<p class="mut">No signals match. Widen the dates or turn on more signal types.</p>'}</div>`}
+if(S.tab=='Signals')h+=`<div class="grid g2">${Object.keys(T).map(t=>{const l=c.ev.map((e,i)=>({...e,i})).filter(e=>e.t==t);return `<div class="card">${tag(t)} <span class="mut">${l.length} signals</span>${l.map(e=>`<p style="margin:.5em 0"><a href="#" onclick="ev(${ci},${e.i});return false">${e.ti}</a> <span class="mut">${fd(e.d)}</span></p>`).join('')||'<p class="mut">None recorded yet.</p>'}</div>`}).join('')}</div>`;
+if(S.tab=='Emerging Patterns')h+=`<p class="note">Patterns need several related signals over time. One event is never treated as proof.</p><div class="grid g2">${c.pat.map((p,i)=>brief(ci,p,i)).join('')}</div>`;
+if(S.tab=='Trajectory')h+=`<div class="card">${trj(c,true)}</div>`;
+if(S.tab=='What-If'){const s=SC[S.sc],n=c.n;h+=`<div class="chips">${Object.keys(SC).map(k=>`<button class="chip ${S.sc==k?'on':''}" style="${S.sc==k?'background:var(--acc)':''}" onclick="S.sc='${k}';render()">${SC[k][0].replace('Competitor',n)}</button>`).join('')}</div><p class="note">Scenario analysis, not a guaranteed prediction.</p><div class="grid g2">${['Product','Pricing','Customers','Sales','Competition'].map((l,i)=>`<div class="card"><h3>${l}</h3>${s[i+1]}</div>`).join('')}<div class="card"><h3>Signals to monitor</h3><ul>${s[6].map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`}
+return h}
+function trj(c,full){const t=c.tr;return `<div class="steps">${t.st.map((s,i)=>`<div class="step ${i==Math.floor(t.now)?'now':i>t.now?'nx':''}">${s}<div class="mut" style="font-weight:400">${i==Math.floor(t.now)?'Current position':i>t.now?'Possible next':'Earlier'}</div></div>`).join('')}</div><p>${t.note}</p><p class="note">Based on observed signals. This is not a claim that the competitor will definitely do this.</p>`+(full?`<h3>Supporting signals</h3>${t.ev.map(i=>`<p style="margin:.4em 0">${tag(c.ev[i].t)} <a href="#" onclick="ev(${C.indexOf(c)},${i});return false">${c.ev[i].ti}</a> <span class="mut">${fd(c.ev[i].d)}</span></p>`).join('')}`:'')}
+function render(){nav();$('#app').innerHTML=`<div class="demo"><b>Demo data.</b> These are fictional companies with realistic public-event patterns, not live collected data.</div>`+(S.v=='dash'?dash():comp())}
+render();
+</script></body></html>
